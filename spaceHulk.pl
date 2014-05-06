@@ -7,13 +7,49 @@
 
 /* Inventory */
 :- dynamic have/1.
-
+help :-
+    write( '\'n\', \'e\', \'w\', and \'s\' for North, East, South, & West.' ), 
+    nl,
+    write( '\'take(ITEM)\' to pick up an item.'),
+    nl,
+    write( '\'gun\' to use your gun' ),
+    nl,
+    write( '\'inventory\' to view your inventory' ),
+    nl,
+    write( '\'navigation\' to inspect navigation options' ), 
+    nl.
+     
 inventory :-
     have(X),
     write('Inventory:'),
     nl,
     write(X),
     fail.
+
+navigation :-
+    location(you, LOCATION),
+    next_to( LOCATION, n, N),
+    write( 'The the North is '),
+    write( N ),
+    nl,
+    fail;
+    location(you, LOCATION),
+    next_to( LOCATION, e, E),
+    write( 'The the East is the '),
+    write( E ),
+    nl,
+    fail;
+    location(you, LOCATION),
+    next_to( LOCATION, w, W),
+    write( 'The the West is the '),
+    write( W ),
+    nl,
+    fail;
+    location(you, LOCATION),
+    next_to( LOCATION, s, S),
+    write( 'The the South is the '),
+    write( S ),
+    nl.
 
 /* If the pilot is rescued */
 :- dynamic rescued/1.    
@@ -120,6 +156,7 @@ gun :-
 
 /* Using the gun improperly */
 gun :-
+    assert(dead(you)),
     write('Upon firing your weapon, you hear loud shuffelling in the room '),
     nl,
     write('next to you. Suddenly, from around the corner you are rushed by '),
@@ -130,7 +167,7 @@ gun :-
     nl,
     write('into death.'),
     nl, nl,
-    done.
+    lose.
 
 /* Rooms you have access to */
 :- dynamic access/1.
@@ -168,7 +205,7 @@ gun :-
 cargobay :-
     write('You are in the cargo bay of the ship. Everything is dishevelled, '),
     nl,
-    write('wrecked from the crash. Towards the front of the ship is the hangar.'),
+    write('wrecked from the crash. '),
     nl, 
     write('You notice a loaded gun on the floor to your left.'),
     nl, nl,
@@ -176,15 +213,16 @@ cargobay :-
 
 shuttle :-
     not(dead(alienone)),
+    assert(dead(you)),
     write('You try to run, but the Tyranid creatues takes you to the ground '),
     nl,
     write('and tears you apart.'),
     nl, nl,
-    assert(dead(you)),
-    done.
+    lose.
 
 shuttle :-
     have(medkit),
+    assert(rescued(pilot)),
     write('You run into the shuttle, the ship is falling into orbit sirens'),
     nl,
     write('blaring. You quickly stitch up the pilot and seal the doors to the'),
@@ -197,8 +235,7 @@ shuttle :-
     nl,
     write('in flame. You made it out just in time.'),
     nl, nl,
-    assert(rescued(pilot)),
-    done.
+    win.
 
 shuttle :-
     write('You are inside the slightly damage shuttle. On the ground next to'),
@@ -339,7 +376,7 @@ go(DIRECTION) :-
 go(DIRECTION) :-
     location(you, CURRENT),
     next_to(CURRENT, DIRECTION, PLACE),
-    write('The door to '), write(PLACE), ' the is locked.'),
+    write('The door to '), write(PLACE, ' the is locked.'),
     nl,
     begin.
 
@@ -363,20 +400,21 @@ start :-
 
 /*begin :- done.*/
 
+/* Take input from the user and then attempt to call the user's input. */
 begin :-
     read(INPUT),    /* Read from the keyboard */
     call(INPUT),    /* Call the function the user typed */
     begin.          /* See if the the goal has been met */
 
 /* Check for death */
-done :-
+lose :-
     dead(you),
     write('You lose...'),
     nl,
     halt.
 
 /* Check for victory */
-done :-
+win :-
     /* Finish terms */
     location(you, shuttle),
     rescued(pilot),
